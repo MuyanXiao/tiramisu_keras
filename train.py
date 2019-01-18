@@ -28,8 +28,12 @@ from modelTiramisu import Tiramisu
 import math
 
 
-def basicTest(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
-    # random.seed(7)
+def train(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
+    """
+    Training pipeline
+    Performing training and evaluation of the tiramisu model on the given dataset
+    The dataset should be loaded into a hdf5 file
+    """
     # ------------------------------------------------------------------------------------------------------------------- #
     # Read HDF5 file
     hdf5_name = hdf5_name
