@@ -67,6 +67,21 @@ class SaveHDF5(object):
             self.hdf5_file["im_name"][i] = self.im_list[i][0:15]
 
         self.hdf5_file.close()
+       
+    
+def main():
+    parser = argparse.ArgumentParser(description="Data initialization -- write the train/val/test data into a hdf5 file.")
+    parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original images")
+    parser.add_argument("label_dir", metavar="LABEL_DIR", type=str, help="Path to annotations")
+    parser.add_argument("out_dir", metavar="OUT_DIR", type=str, help="Path to output folder")
+    parser.add_argument("out_name", metavar="OUT_NAME", type=str, help="Name of the hdf5 file")
+
+    args = parser.parse_args()
+
+    SaveHDF5(args.in_dir, args.label_dir, args.out_dir, args.out_name)
+
+if __name__=='__main__':
+    main()
 
 
 
