@@ -28,20 +28,20 @@ from modelTiramisu import Tiramisu
 import math
 
 
-def train(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
+def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
     """
     Training pipeline
     Performing training and evaluation of the tiramisu model on the given dataset
     The dataset should be loaded into a hdf5 file
     """
     # ------------------------------------------------------------------------------------------------------------------- #
-    # Read HDF5 file
-    hdf5_file = h5py.File('../Data/'+hdf5_name+'.hdf5', 'r')
+    # Read HDF5 file if already loaded
+    # hdf5_file = h5py.File('../Data/'+hdf5_name+'.hdf5', 'r')
 
     # # ------------------------------------------------------------------------------------------------------------------ #
     # Generate training, validation, testing sets
     # the separation settings are meanwhile saved to the HDF5 file
-    # data_set_list = DataLoader('../Data/C6/All/').generate()
+    data_set_list = DataLoader(in_dir).generate()
 
     # ------------------------------------------------------------------------------------------------------------------- #
     # Generate batch sample
@@ -94,7 +94,7 @@ def train(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
 
     # file_id = 'test'
     # create a new folder
-    newPath = '../Result/'+file_id+'_C1_7S/'
+    newPath = '../Result/'+file_id
 
     try:
         os.makedirs(newPath)
@@ -114,15 +114,16 @@ def train(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
     # Tiramisu_3D().create([dim_patch, dim_patch], [4, 6, 8], 10, [8, 6, 4], 12, 0.0001, 0.5, 5, model_id)
     Tiramisu().create([dim_patch, dim_patch], [4, 6, 8], 10, [8, 6, 4], 12, 0.0001, 0.5, 5, model_id)
 
-    load_model_name = '../Model/tiramisu_fc_dense'+model_id+'.json'
-    with open(load_model_name) as model_file:
-        tiramisu = models.model_from_json(model_file.read())
-
-    # tiramisu.load_weights("../Result/2805_11_C1_RS/prop_tiramisu_weights_C1_17_RS.best.hdf5",by_name=True)
+    if len(pre_trained)>0:
+        load_model_name = '../Model/tiramisu_fc_dense'+model_id+'.json'
+        with open(load_model_name) as model_file:
+            tiramisu = models.model_from_json(model_file.read())
+            tiramisu.load_weights("../Result/"+pre_trained+"/prop_tiramisu_weights_"+model_id+".best.hdf5",by_name=True)
 
     # specify optimizer
     optimizer = Nadam(lr=0.0005)
 
+    # number of epochs
     nb_epoch = 20
 
     # metrics using accuracy or IoU
@@ -231,7 +232,17 @@ def train(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
     np.save(newPath+'Train_history', log_history)
 
     hdf5_file.close()
+ 
+                                  
+def main():
+    parser = argparse.ArgumentParser(description="Train the model")
+    parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original images")
+    parser.add_argument("hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
+    
+    args = parser.parse_args()
 
+    train(args.in_dir, args.hdf5_name)            
 
+    
 if __name__=='__main__':
-    train()
+    main()
