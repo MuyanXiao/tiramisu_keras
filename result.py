@@ -12,10 +12,8 @@ import cv2
 import numpy as np
 from helper import *
 
-# resultPath = '../Result/2805_11_C1_RS/'
-
-resultPath = '../../time1/test_sofar/c617_on_c617/1204_13_bs_aug/'
-conf_mat = np.load(resultPath + 'conf_mat_minus1.npy')
+resultPath = PATH_TO_RESULT  # the path containing the confusion matrix
+conf_mat = np.load(resultPath + 'conf_mat.npy')
 conf_mat = conf_mat[0:4, 0:4]
 
 nb_class = conf_mat.shape[0]
@@ -37,7 +35,7 @@ mean_IOU = np.sum(IOU)/4
 
 #------------------------------------------------------------------------------------------------------------------------#
 # record the results in the log file
-text_file = open(resultPath+'result_medianM1.txt',"w")
+text_file = open(resultPath+'result.txt',"w")
 
 text_file.write('------------------------------------------------------------------------------')
 
