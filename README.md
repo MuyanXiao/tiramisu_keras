@@ -8,12 +8,12 @@ Implementation of [The One Hundred Layers Tiramisu](https://arxiv.org/abs/1611.0
 - Opencv
 
 ##### Directory structure:
- + tiramisu_keras
- + Data
-   + Images
-   + Labels
- + Model
- + Result
+ \+ tiramisu_keras
+ \+ Data
+   \+ Images
+   \+ Labels
+ \+ Model
+ \+ Result
 
 ### Data preparation
 Write the image data files in to an HDF5 file: 
