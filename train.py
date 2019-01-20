@@ -36,7 +36,6 @@ def train(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
     """
     # ------------------------------------------------------------------------------------------------------------------- #
     # Read HDF5 file
-    hdf5_name = hdf5_name
     hdf5_file = h5py.File('../Data/'+hdf5_name+'.hdf5', 'r')
 
     # # ------------------------------------------------------------------------------------------------------------------ #
@@ -235,4 +234,4 @@ def train(hdf5_name='C1_17_RS', rs_rate=4, balancing=False):
 
 
 if __name__=='__main__':
-    basicTest()
+    train()
