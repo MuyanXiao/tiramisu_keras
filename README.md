@@ -1,5 +1,6 @@
 # tiramisu_keras
-Implementation of [The One Hundred Layers Tiramisu](https://arxiv.org/abs/1611.09326) (FC-DenseNet) using keras, the pipeline was used for the [lake ice detection project](http://www.prs.igp.ethz.ch/research/current_projects/integrated-monitoring-of-ice-swiss-lakes.html).
+This repository is the implementation of [The One Hundred Layers Tiramisu](https://arxiv.org/abs/1611.09326) (FC-DenseNet) using keras. The implementation was extended and modified starting from the one in [0bserver07/One-Hundred-Layers-Tiramisu
+](https://github.com/0bserver07/One-Hundred-Layers-Tiramisu). The pipeline was used for the [lake ice detection project](http://www.prs.igp.ethz.ch/research/current_projects/integrated-monitoring-of-ice-swiss-lakes.html). 
 
 ##### Installation:
 - Numpy
