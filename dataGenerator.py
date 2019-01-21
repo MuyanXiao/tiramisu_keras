@@ -6,7 +6,7 @@ from data_loader import DataSet
 
 class DataGenerator(object):
     """
-    Generate batch sample
+    Generate batch sample on the fly, with the original data in an HDF5 file
     Given the data directory, the data_set_list
     Generate list of crop sets
 
