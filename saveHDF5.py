@@ -27,8 +27,8 @@ class SaveHDF5(object):
 
     def __init__(self, in_dir, label_dir, out_dir, out_name):
         im_list = os.listdir(label_dir)
-        im0 = cv2.imread(in_dir+im_list[0])  # read an image to get the image dimension
-        # (self.r, self.c, _) = im0.shape
+        # im0 = cv2.imread(in_dir+im_list[0])  # read an image to get the image dimension
+        (self.r, self.c, _) = im0.shape
         self.r = 324
         self.c = 1209
         num_im = len(im_list)
