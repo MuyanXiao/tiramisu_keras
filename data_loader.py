@@ -63,12 +63,12 @@ class DataLoader(object):
 
         return data_set_list
 
-    def save_hdf5(self, data_set_list, hdf5_file_name):
+    def save_hdf5(self, data_set_list, hdf5_file_dir, hdf5_file_name):
         # saving the list result in the file DataSet.hdf5
         # in data group "set", "index"
-        hdf5_file = h5py.File('../../FullTests/C0_JDall/Data/' + hdf5_file_name, 'r+')
+        hdf5_file = h5py.File(hdf5_file_dir + hdf5_file_name + '.hdf5', 'r+')
         # data_set_list = self.generate()
-        date0 = date(2016, 12, 01)
+        date0 = date(2016, 12, 1)
         for i in range(len(self.t_file_list[0])):
             im_name = hdf5_file["im_name"][i]
             im_time = (date(int(im_name[0:4]), int(im_name[5:7]), int(im_name[7:9]))-date0).days
@@ -114,7 +114,7 @@ class DataLoader(object):
 
         # date0 is a reference date for calculating the time difference,
         # tList1 contains the time difference of the files with date0
-        date0 = date(2016, 12, 01)
+        date0 = date(2016, 12, 1)
         t_list1 = [(date(int(t_list[i][0:4]), int(t_list[i][5:7]), int(t_list[i][7:9]))-date0).days
                    + (float(t_list[i][10:12])+float(t_list[i][13:15])/60)/24 for i in range(len(t_list))]
 
@@ -156,9 +156,9 @@ class DataLoader(object):
         else:
             for i_period in range(len(t_periods)):
                 num_file = len(t_periods[i_period])
-                ind_train = random.sample(xrange(0, num_file), int(round(num_file*self.ratio_div[0])))
-                ind_val = random.sample(list(set(xrange(0, num_file))-set(ind_train)), int(round(num_file*self.ratio_div[1])))
-                ind_test = list(set(xrange(0, num_file))-set(ind_val)-set(ind_train))
+                ind_train = random.sample(range(0, num_file), int(round(num_file*self.ratio_div[0])))
+                ind_val = random.sample(list(set(range(0, num_file))-set(ind_train)), int(round(num_file*self.ratio_div[1])))
+                ind_test = list(set(range(0, num_file))-set(ind_val)-set(ind_train))
                 ind_set = [ind_train, ind_val, ind_test]
                 # ind_set = np.random.choice([0, 1, 2], num_file, p=self.ratio_div)
                 i_sets = [[], [], []]

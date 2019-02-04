@@ -3,6 +3,7 @@ import cv2
 import math
 import h5py
 import os
+import argparse
 
 
 class SaveHDF5(object):
@@ -27,10 +28,10 @@ class SaveHDF5(object):
 
     def __init__(self, in_dir, label_dir, out_dir, out_name):
         im_list = os.listdir(label_dir)
-        # im0 = cv2.imread(in_dir+im_list[0])  # read an image to get the image dimension
+        im0 = cv2.imread(in_dir+im_list[0])  # read an image to get the image dimension
         (self.r, self.c, _) = im0.shape
-        self.r = 324
-        self.c = 1209
+        # self.r = 324
+        # self.c = 1209
         num_im = len(im_list)
 
         # HDF5 file settings
@@ -71,14 +72,15 @@ class SaveHDF5(object):
     
 def main():
     parser = argparse.ArgumentParser(description="Data initialization -- write the train/val/test data into a hdf5 file.")
-    parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original images")
+    parser.add_argument("image_dir", metavar="IN_DIR", type=str, help="Path to original images")
     parser.add_argument("label_dir", metavar="LABEL_DIR", type=str, help="Path to annotations")
-    parser.add_argument("out_dir", metavar="OUT_DIR", type=str, help="Path to output folder")
-    parser.add_argument("out_name", metavar="OUT_NAME", type=str, help="Name of the hdf5 file")
+    parser.add_argument("hdf5_dir", metavar="OUT_DIR", type=str, help="Path to output folder")
+    parser.add_argument("hdf5_name", metavar="OUT_NAME", type=str, help="Name of the hdf5 file")
 
     args = parser.parse_args()
 
-    SaveHDF5(args.in_dir, args.label_dir, args.out_dir, args.out_name)
+    SaveHDF5(args.image_dir, args.label_dir, args.hdf5_dir, args.hdf5_name)
+
 
 if __name__=='__main__':
     main()

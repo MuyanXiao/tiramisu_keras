@@ -11,9 +11,10 @@ from keras.callbacks import ModelCheckpoint, LambdaCallback, BaseLogger, EarlySt
 from keras import backend as K
 from keras import callbacks
 from keras.callbacks import Callback
+import argparse
 # import math
 # import cv2
-# import numpy as np
+import numpy as np
 # import json
 import h5py
 # import random 
@@ -22,13 +23,21 @@ from helper import *
 
 K.set_image_dim_ordering('tf')  # channel_last data format
 
-# from data_loader import DataLoader
+from data_loader import DataLoader
 from dataGenerator import DataGenerator
 from modelTiramisu import Tiramisu
 import math
 
+parser = argparse.ArgumentParser(description="Train the model")
+parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original images")
+parser.add_argument("--hdf5_dir", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
+parser.add_argument("--hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
+parser.add_argument("--isloaded", metavar="IS_LOADED", type=bool, default=False, help="if the data is loaded")
+parser.add_argument("--pre_trained", metavar="PRETRAINED_MODEL", type=str, default="",
+                    help="the path and name to the model file, e.g. ../Model/model.hdf5")
 
-def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
+
+def train(in_dir, hdf5_dir='../Data/', hdf5_name='filename', isloaded=False, pre_trained='', rs_rate=4, balancing=False):
     """
     Training pipeline
     Performing training and evaluation of the tiramisu model on the given dataset
@@ -36,12 +45,15 @@ def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
     """
     # ------------------------------------------------------------------------------------------------------------------- #
     # Read HDF5 file if already loaded
-    # hdf5_file = h5py.File('../Data/'+hdf5_name+'.hdf5', 'r')
-
+    if isloaded:
+        hdf5_file = h5py.File(hdf5_dir+hdf5_name+'.hdf5', 'r')
+    else:
     # # ------------------------------------------------------------------------------------------------------------------ #
     # Generate training, validation, testing sets
     # the separation settings are meanwhile saved to the HDF5 file
-    data_set_list = DataLoader(in_dir).generate()
+        data_loader = DataLoader(in_dir)
+        data_set_list = data_loader.generate()
+        data_loader.save_hdf5(data_set_list, hdf5_dir, hdf5_name)
 
     # ------------------------------------------------------------------------------------------------------------------- #
     # Generate batch sample
@@ -76,7 +88,6 @@ def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
     val_setting = DataGenerator(**params_val)
 
     # calculate class weighting
-    # class_weighting = hdf5_file["class_weighting"].value
     class_weighting = train_setting.class_weight
     num_train = len(train_setting.crop_list)
     num_val = len(val_setting.crop_list)
@@ -118,7 +129,7 @@ def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
         load_model_name = '../Model/tiramisu_fc_dense'+model_id+'.json'
         with open(load_model_name) as model_file:
             tiramisu = models.model_from_json(model_file.read())
-            tiramisu.load_weights("../Result/"+pre_trained+"/prop_tiramisu_weights_"+model_id+".best.hdf5",by_name=True)
+            tiramisu.load_weights(pre_trained, by_name=True)
 
     # specify optimizer
     optimizer = Nadam(lr=0.0005)
@@ -134,22 +145,10 @@ def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
 
     filePath = newPath+'prop_tiramisu_weights_'+model_id+'.best.hdf5'
     checkpoint = ModelCheckpoint(filePath, monitor='val_acc', verbose=2, save_best_only=True, save_weights_only=False, mode='max')
+    # the training stops when the validation accuracy stops improving for 5 epochs
     earlyStopping = EarlyStopping(monitor='val_acc', patience=4, verbose=1, mode='max')
 
     callbacks_list = [checkpoint, earlyStopping]
-
-
-    # class callbackLog(Callback):
-    #     def __init__(self):
-    #         super(callbackLog, self).__init__()
-    #         self.seen = []
-    #
-    #     def on_batch_end(self, batch, logs=None):
-    #         logs = logs or {}
-    #         batch_size = logs.get('size', 0)
-    #         self.seen.append(batch_size)
-    #
-    # batch_print_callback = callbackLog()
 
     # ------------------------------------------------------------------------------------------------------------------- #
     # record the settings in a text file
@@ -188,12 +187,7 @@ def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
         validation_steps=math.ceil(num_val/float(batch_size)),
         epochs=nb_epoch,
         verbose=1,
-        # max_queue_size=1,
-        # use_multiprocessing=True,
         callbacks=callbacks_list)
-        # class_weight=class_weighting)
-
-    # print(batch_print_callback.seen)
 
     # This save the trained model weights to this file with number of epochs
     tiramisu.save_weights(newPath+'prop_tiramisu_weights_'+model_id+'_{}.hdf5'.format(nb_epoch))
@@ -235,13 +229,10 @@ def train(in_dir, hdf5_name='filename', rs_rate=4, balancing=False):
  
                                   
 def main():
-    parser = argparse.ArgumentParser(description="Train the model")
-    parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original images")
-    parser.add_argument("hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
-    
     args = parser.parse_args()
 
-    train(args.in_dir, args.hdf5_name)            
+    train(args.in_dir, hdf5_dir=args.hdf5_dir, hdf5_name=args.hdf5_file, isloaded=args.isloaded,
+          pre_trained=args.pre_trained)
 
     
 if __name__=='__main__':
