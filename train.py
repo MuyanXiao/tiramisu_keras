@@ -125,10 +125,10 @@ def train(in_dir, hdf5_dir='../Data/', hdf5_name='filename', isloaded=False, pre
     # Tiramisu_3D().create([dim_patch, dim_patch], [4, 6, 8], 10, [8, 6, 4], 12, 0.0001, 0.5, 5, model_id)
     Tiramisu().create([dim_patch, dim_patch], [4, 6, 8], 10, [8, 6, 4], 12, 0.0001, 0.5, 5, model_id)
 
-    if len(pre_trained)>0:
-        load_model_name = '../Model/tiramisu_fc_dense'+model_id+'.json'
-        with open(load_model_name) as model_file:
-            tiramisu = models.model_from_json(model_file.read())
+    load_model_name = '../Model/tiramisu_fc_dense_'+model_id+'.json'
+    with open(load_model_name) as model_file:
+        tiramisu = models.model_from_json(model_file.read())
+        if len(pre_trained)>0:
             tiramisu.load_weights(pre_trained, by_name=True)
 
     # specify optimizer
