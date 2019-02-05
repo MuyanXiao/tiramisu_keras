@@ -133,7 +133,7 @@ class Tiramisu():
 
         model = Model(inputs=[inputs], outputs=[act_lake])
 
-        with open('../Model/tiramisu_fc_dense'+model_name+'.json', 'w') as outfile:
+        with open('../Model/tiramisu_fc_dense_'+model_name+'.json', 'w') as outfile:
             outfile.write(json.dumps(json.loads(model.to_json()), indent=3))
 
         text_file = open('../Model/Setting.txt',"w")
