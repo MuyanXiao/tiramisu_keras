@@ -30,18 +30,19 @@ parser = argparse.ArgumentParser(description="Test the model")
 parser.add_argument("--result_dir", metavar="RESULT_DIR", type=str, default="../Result/", help="Path to store the predictions")
 parser.add_argument("--model_name", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
 parser.add_argument("--hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
+parser.add_argument("--dim_patch", metavar="DIM_PATCH", type=int, help="size of the cropped patches, 56 for c0, 224 for c1")
 
 # ------------------------------------------------------------------------------------------------------------------- #
 # Prediction on test set
 # ------------------------------------------------------------------------------------------------------------------- #
 # prediction settings
-def prediction(result_path='_', model_name='C0_17_RS', pred_file='C0_17_RS.hdf5'):
+def prediction(result_path='_', model_name='C0_17_RS', pred_file='C0_17_RS.hdf5', dim_patch=224):
     resultPath = result_path  # maybe change later to enter the path in the terminal
 
     # Read HDF5 file
     hdf5_file = h5py.File('../Data/' + pred_file, 'r')
 
-    dim_patch = 224
+    dim_patch = dim_patch
     num_fusion = 0  # the number of previous/following patch to be fused in the input
 
     params_test = {
@@ -212,7 +213,7 @@ def prediction(result_path='_', model_name='C0_17_RS', pred_file='C0_17_RS.hdf5'
 def main():
     args = parser.parse_args()
 
-    prediction(result_path=args.result_dir, model_name=args.model_name, pred_file=args.hdf5_file)
+    prediction(result_path=args.result_dir, model_name=args.model_name, pred_file=args.hdf5_file, dim_patch=args.dim_patch)
 
     
 if __name__=='__main__':
