@@ -31,13 +31,14 @@ import math
 parser = argparse.ArgumentParser(description="Train the model")
 parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original images")
 parser.add_argument("--hdf5_dir", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
-parser.add_argument("--hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
+parser.add_argument("--hdf5_file", metavar="HDF5_NAME", default="", type=str, help="Name of the hdf5 file")
+parser.add_argument("--dim_patch", metavar="DIM_PATCH", default=224, type=int, help="size of the cropped patches, 56 for c0, 224 for c1")
 parser.add_argument("--isloaded", metavar="IS_LOADED", type=bool, default=False, help="if the data is loaded")
 parser.add_argument("--pre_trained", metavar="PRETRAINED_MODEL", type=str, default="",
                     help="the path and name to the model file, e.g. ../Model/model.hdf5")
 
 
-def train(in_dir, hdf5_dir='../Data/', hdf5_name='filename', isloaded=False, pre_trained='', rs_rate=4, balancing=False):
+def train(in_dir, hdf5_dir='../Data/', hdf5_name='filename', dim_patch=224, isloaded=False, pre_trained='', rs_rate=4, balancing=False):
     """
     Training pipeline
     Performing training and evaluation of the tiramisu model on the given dataset
@@ -59,7 +60,6 @@ def train(in_dir, hdf5_dir='../Data/', hdf5_name='filename', isloaded=False, pre
     # Generate batch sample
     # settings
     batch_size = 10
-    dim_patch = 224
     num_fusion = 0  # the number of previous/following patch to be fused in the input
 
     params_train = {
@@ -231,7 +231,7 @@ def train(in_dir, hdf5_dir='../Data/', hdf5_name='filename', isloaded=False, pre
 def main():
     args = parser.parse_args()
 
-    train(args.in_dir, hdf5_dir=args.hdf5_dir, hdf5_name=args.hdf5_file, isloaded=args.isloaded,
+    train(args.in_dir, hdf5_dir=args.hdf5_dir, hdf5_name=args.hdf5_file, dim_patch=args.dim_patch, isloaded=args.isloaded,
           pre_trained=args.pre_trained)
 
     
