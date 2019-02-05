@@ -29,8 +29,8 @@ from dataGenerator import DataGenerator, get_crop
 parser = argparse.ArgumentParser(description="Test the model")
 parser.add_argument("--result_dir", metavar="RESULT_DIR", type=str, default="../Result/", help="Path to store the predictions")
 parser.add_argument("--model_name", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
-parser.add_argument("--hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
-parser.add_argument("--dim_patch", metavar="DIM_PATCH", type=int, help="size of the cropped patches, 56 for c0, 224 for c1")
+parser.add_argument("--hdf5_file", metavar="HDF5_NAME", default="", type=str, help="Name of the hdf5 file")
+parser.add_argument("--dim_patch", metavar="DIM_PATCH", default=224, type=int, help="size of the cropped patches, 56 for c0, 224 for c1")
 
 # ------------------------------------------------------------------------------------------------------------------- #
 # Prediction on test set
