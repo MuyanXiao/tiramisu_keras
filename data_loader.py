@@ -13,7 +13,7 @@ parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original
 # data sets division settings
 parser.add_argument("--regular_div", metavar="REGULAR_DIV", default=True, type=bool,
                     help="specify if the original image sequence is regularly separated.")
-parser.add_argument("--day_block", metavar="DAY_BLOCK", default=2, type=str,
+parser.add_argument("--day_block", metavar="DAY_BLOCK", default=7, type=str,
                     help="Specifies the time interval (how many days) within a train/val/test block.")
 parser.add_argument("--ratio_div", metavar="RATIO_DIV", default=[0.6, 0.15, 0.25], type=tuple,
                     help="Specifies the ratio of splitting the train/val/test subsets within a block")
@@ -63,7 +63,7 @@ class DataLoader(object):
         Lists for training/validation/testing sets.
     """
 
-    def __init__(self, in_dir, regular_div=True, day_block=2, ratio_div=[0.6, 0.15, 0.25],
+    def __init__(self, in_dir, regular_div=True, day_block=7, ratio_div=[0.6, 0.15, 0.25],
                  order_div=True, end_date=[], mode=None, remove_tr_list = []):
         self.in_dir = in_dir
         self.regular_div = regular_div
