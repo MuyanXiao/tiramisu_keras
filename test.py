@@ -28,7 +28,7 @@ from dataGenerator import DataGenerator, get_crop
 # parse parameters
 parser = argparse.ArgumentParser(description="Test the model")
 parser.add_argument("--result_dir", metavar="RESULT_DIR", type=str, default="../Result/", help="Path to store the predictions")
-parser.add_argument("--model_name", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
+parser.add_argument("--model_name", metavar="MODEL_NAME", default="", type=str, help="Name specified for the model, e.g. C1_17_RS for prop_tiramisu_weights_C1_17_RS.best.hdf5")
 parser.add_argument("--hdf5_file", metavar="HDF5_NAME", default="", type=str, help="Name of the hdf5 file")
 parser.add_argument("--dim_patch", metavar="DIM_PATCH", default=224, type=int, help="size of the cropped patches, 56 for c0, 224 for c1")
 
