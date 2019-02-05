@@ -17,8 +17,8 @@ This repository is the implementation of [The One Hundred Layers Tiramisu](https
     + Model
     + Result
 
-### Data preparation1. 
-Write the image data files in to an HDF5 file: 
+### Data preparation
+1. Write the image data files in to an HDF5 file: 
 python saveHDF5.py PATH_TO_IMAGE PATH_TO_ANNOTATION PATH_TO_HDF5 NAME_TO_HDF5
 (e.g. python saveHDF5.py ../Data/Images/ ../Data/Labels/ ../Data/ demo.hdf5)
 
