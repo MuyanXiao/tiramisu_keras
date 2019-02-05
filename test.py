@@ -27,16 +27,17 @@ from dataGenerator import DataGenerator, get_crop
 
 # parse parameters
 parser = argparse.ArgumentParser(description="Test the model")
-parser.add_argument("--result_dir", metavar="RESULT_DIR", type=str, default="../Result/", help="Path to store the predictions")
-parser.add_argument("--model_name", metavar="MODEL_NAME", default="", type=str, help="Name specified for the model, e.g. C1_17_RS for prop_tiramisu_weights_C1_17_RS.best.hdf5")
-parser.add_argument("--hdf5_file", metavar="HDF5_NAME", default="", type=str, help="Name of the hdf5 file")
+parser.add_argument("result_dir", metavar="RESULT_DIR", type=str, help="Path to store the predictions")
+parser.add_argument("model_name", metavar="MODEL_NAME", type=str, help="Name specified for the model, e.g. C1_17_RS for prop_tiramisu_weights_C1_17_RS.best.hdf5")
+parser.add_argument("hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
 parser.add_argument("--dim_patch", metavar="DIM_PATCH", default=224, type=int, help="size of the cropped patches, 56 for c0, 224 for c1")
+
 
 # ------------------------------------------------------------------------------------------------------------------- #
 # Prediction on test set
 # ------------------------------------------------------------------------------------------------------------------- #
 # prediction settings
-def prediction(result_path='_', model_name='C0_17_RS', pred_file='C0_17_RS.hdf5', dim_patch=224):
+def prediction(result_path, model_name, pred_file, dim_patch=224):
     resultPath = result_path  # maybe change later to enter the path in the terminal
 
     # Read HDF5 file
@@ -99,6 +100,7 @@ def prediction(result_path='_', model_name='C0_17_RS', pred_file='C0_17_RS.hdf5'
 
     # ------------------------------------------------------------------------------------------------------------------ #
     # load the model (and weights):
+    Tiramisu().create([dim_patch, dim_patch], [4, 6, 8], 10, [8, 6, 4], 12, 0.0001, 0.5, 5, model_name)
     load_model_name = '../Model/tiramisu_fc_dense_' + model_name + '.json'
     model_file = open(load_model_name, 'r')
     tiramisu = models.model_from_json(model_file.read())
@@ -213,7 +215,7 @@ def prediction(result_path='_', model_name='C0_17_RS', pred_file='C0_17_RS.hdf5'
 def main():
     args = parser.parse_args()
 
-    prediction(result_path=args.result_dir, model_name=args.model_name, pred_file=args.hdf5_file, dim_patch=args.dim_patch)
+    prediction(args.result_dir, args.model_name, args.hdf5_file, dim_patch=args.dim_patch)
 
     
 if __name__=='__main__':

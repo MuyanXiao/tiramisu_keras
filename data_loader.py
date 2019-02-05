@@ -4,6 +4,29 @@ from datetime import date
 import math
 import h5py
 import random
+import argparse
+
+
+parser = argparse.ArgumentParser(description="Prepare the datasets")
+parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original images")
+
+# data sets division settings
+parser.add_argument("--regular_div", metavar="REGULAR_DIV", default=True, type=bool,
+                    help="specify if the original image sequence is regularly separated.")
+parser.add_argument("--day_block", metavar="DAY_BLOCK", default=2, type=str,
+                    help="Specifies the time interval (how many days) within a train/val/test block.")
+parser.add_argument("--ratio_div", metavar="RATIO_DIV", default=[0.6, 0.15, 0.25], type=tuple,
+                    help="Specifies the ratio of splitting the train/val/test subsets within a block")
+parser.add_argument("--order_div", metavar="ORDER_DIV", type=bool, default=True,
+                    help="Specifies if the training, validation, and testing subsets are selected in order")
+parser.add_argument("--end_date", metavar="END_DATE", type=list, default=[],
+                    help="A list of file names that give the last date of each subset.")
+parser.add_argument("--mode", metavar="MODE", type=str, default=None,
+                    help="A list sequence of ['train','val','test'] that indicates the role of each specified subset")
+
+# saving in the hdf5 file
+parser.add_argument("--hdf5_dir", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
+parser.add_argument("--hdf5_file", metavar="HDF5_NAME", default="", type=str, help="Name of the hdf5 file")
 
 
 class DataSet:
@@ -26,7 +49,7 @@ class DataLoader(object):
                               (year_month_day, e.g. 2016_0101).
 
         # If TRUE is given for regular_div.
-        time_block: Specifies the time interval (how many days) within a train/val/test block.
+        day_block: Specifies the time interval (how many days) within a train/val/test block.
         ratio_div: Specifies the ratio of splitting the train/val/test subsets within a block,
                    A tuple of three float values add up to 1.
         order_div: Specifies if the training, validation, and testing subsets are selected in order (TRUE).
@@ -40,7 +63,7 @@ class DataLoader(object):
         Lists for training/validation/testing sets.
     """
 
-    def __init__(self, in_dir, regular_div=True, day_block=7, ratio_div=[0.6, 0.15, 0.25],
+    def __init__(self, in_dir, regular_div=True, day_block=2, ratio_div=[0.6, 0.15, 0.25],
                  order_div=True, end_date=[], mode=None, remove_tr_list = []):
         self.in_dir = in_dir
         self.regular_div = regular_div
@@ -66,11 +89,11 @@ class DataLoader(object):
     def save_hdf5(self, data_set_list, hdf5_file_dir, hdf5_file_name):
         # saving the list result in the file DataSet.hdf5
         # in data group "set", "index"
-        hdf5_file = h5py.File(hdf5_file_dir + hdf5_file_name + '.hdf5', 'r+')
+        hdf5_file = h5py.File(hdf5_file_dir + hdf5_file_name, 'r+')
         # data_set_list = self.generate()
         date0 = date(2016, 12, 1)
         for i in range(len(self.t_file_list[0])):
-            im_name = hdf5_file["im_name"][i]
+            im_name = hdf5_file["im_name"][i].decode("utf-8")
             im_time = (date(int(im_name[0:4]), int(im_name[5:7]), int(im_name[7:9]))-date0).days
 
             ind_train = [1 if im_name in i_period else 0 for i_period in data_set_list.train]
@@ -220,4 +243,17 @@ class DataLoader(object):
         return data_set_list
 
 
+def main():
+    args = parser.parse_args()
+    # # ------------------------------------------------------------------------------------------------------------------ #
+    # Generate training, validation, testing sets
+    # the separation settings are meanwhile saved to the HDF5 file
+    data_loader = DataLoader(args.in_dir, regular_div=args.regular_div, day_block=args.day_block,
+                             ratio_div=args.ratio_div, order_div=args.order_div, end_date=args.end_date,
+                             mode=args.mode)
+    data_set_list = data_loader.generate()
+    data_loader.save_hdf5(data_set_list, args.hdf5_dir, args.hdf5_file)
 
+
+if __name__ == '__main__':
+    main()

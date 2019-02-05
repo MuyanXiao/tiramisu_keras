@@ -71,8 +71,7 @@ class SaveHDF5(object):
 
             unique, counts = np.unique(im_label, return_counts=True)
             self.hdf5_file["im_class"][i] = np.where(class_values == unique[np.argmax(counts)])[0][0]
-
-            self.hdf5_file["im_name"][i] = self.im_list[i][0:15]
+            self.hdf5_file["im_name"][i] = np.string_(self.im_list[i][0:15])
 
         self.hdf5_file.close()
        
@@ -80,7 +79,8 @@ class SaveHDF5(object):
 def main():
     args = parser.parse_args()
 
-    SaveHDF5(args.image_dir, args.label_dir, args.hdf5_dir, args.hdf5_name)
+    hdf5_file = SaveHDF5(args.image_dir, args.label_dir, args.hdf5_dir, args.hdf5_name)
+    hdf5_file.writeHDF5()
 
 
 if __name__=='__main__':
