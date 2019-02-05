@@ -15,26 +15,34 @@ import cv2
 import numpy as np
 import json
 import h5py
+from modelTiramisu import Tiramisu
 
 from helper import *
+import argparse
 
 K.set_image_dim_ordering('tf')  # channel_last data format
 
-from data_loader import DataLoader
 from dataGenerator import DataGenerator, get_crop
-from modelTiramisu import Tiramisu
 
 
-def prediction(result_path='_', model_name='C1_17_RS', pred_file='C1_17_RS.hdf5'):
+# parse parameters
+parser = argparse.ArgumentParser(description="Test the model")
+parser.add_argument("--result_dir", metavar="RESULT_DIR", type=str, default="../Result/", help="Path to store the predictions")
+parser.add_argument("--model_name", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
+parser.add_argument("--hdf5_file", metavar="HDF5_NAME", type=str, help="Name of the hdf5 file")
 
-    # --------------------------------------------------------------------------------------------------------------- #
-    # Prediction on test set
+# ------------------------------------------------------------------------------------------------------------------- #
+# Prediction on test set
+# ------------------------------------------------------------------------------------------------------------------- #
+# prediction settings
+def prediction(result_path='_', model_name='C0_17_RS', pred_file='C0_17_RS.hdf5'):
+    resultPath = result_path  # maybe change later to enter the path in the terminal
 
     # Read HDF5 file
-    hdf5_file = h5py.File('../Data/'+pred_file, 'r')
+    hdf5_file = h5py.File('../Data/' + pred_file, 'r')
 
-    dim_patch = 56
-    num_fusion = 0
+    dim_patch = 224
+    num_fusion = 0  # the number of previous/following patch to be fused in the input
 
     params_test = {
         'hdf5_file': hdf5_file,
@@ -43,24 +51,27 @@ def prediction(result_path='_', model_name='C1_17_RS', pred_file='C1_17_RS.hdf5'
         'dim_z': 3,
         'num_fusion': num_fusion,
         'tag': 'Test'
+        # 'mean': mean
     }
 
     test_setting = DataGenerator(**params_test)
+    test_set_list = test_setting.set_list
 
     # get crop list, mean, and other parameters
     test_crop_list = test_setting.crop_list
     test_crop_per_im = test_setting.num_crop_per_im  # number of cropped patches per image
 
-    overlap = 28
+    overlap = dim_patch/2
 
-    print(test_crop_list[0])
+    # print(test_crop_list[0])
     test_mean = test_setting.mean
-    num_val = len(test_crop_list)/1809
+    num_test = sum([len(i) for i in test_set_list])
+    print(num_test)
 
     r_range = int(math.floor(test_setting.r/(dim_patch-overlap)))-1
     c_range = int(math.floor(test_setting.c/(dim_patch-overlap)))-1
-    dim1_ = 784  # r_range*(dim_patch - overlap) + overlap  # actual size of the input & output image
-    dim2_ = 1904  # c_range*(dim_patch - overlap) + overlap
+    dim1_ = r_range*(dim_patch - overlap) + overlap  # actual size of the input & output image
+    dim2_ = c_range*(dim_patch - overlap) + overlap
 
     color_label = np.array([
         [127, 127, 127],  # water
@@ -70,8 +81,8 @@ def prediction(result_path='_', model_name='C1_17_RS', pred_file='C1_17_RS.hdf5'
     ])  # [0,0,0]
 
     # create a new folder
-    pred_path = result_path + 'prediction/'
-    prob_path = result_path + 'reliability/'
+    pred_path = resultPath + 'prediction/'
+    prob_path = resultPath + 'reliability/'
 
     try:
         os.makedirs(pred_path)
@@ -87,96 +98,67 @@ def prediction(result_path='_', model_name='C1_17_RS', pred_file='C1_17_RS.hdf5'
 
     # ------------------------------------------------------------------------------------------------------------------ #
     # load the model (and weights):
-    # Tiramisu().create([None, None], [4, 6, 8], 10, [8, 6, 4], 12, 0.0001, 0.5, 5, model_name)
-    load_model_name = '../Model/tiramisu_fc_dense' + model_name +'.json'
-    model_file = open(load_model_name,'r')
+    load_model_name = '../Model/tiramisu_fc_dense_' + model_name + '.json'
+    model_file = open(load_model_name, 'r')
     tiramisu = models.model_from_json(model_file.read())
     model_file.close()
-
+    
     # load final weight
-    tiramisu.load_weights(result_path + '/prop_tiramisu_weights_'+model_name+'.best.hdf5')
-
-    # -------------------------------------------------------------------------------------------------------------------#
-    # storing 3d prediction
-    if num_fusion != 0:
-        hdf5_pred = h5py.File(result_path + 'Pred.hdf5', 'w')
-        hdf5_pred.create_dataset('pred', (num_val * 3, dim1_, dim2_, 4), np.float32)
-        hdf5_pred.create_dataset('frame_name', (num_val * 3,), 'S18')
+    tiramisu.load_weights(result_path + '/prop_tiramisu_weights_' + model_name + '.best.hdf5')
 
     # -------------------------------------------------------------------------------------------- #
     conf_mat = np.zeros((5, 5))
     im_name_list = hdf5_file["im_name"].value
-    set_index_list = hdf5_file["set_index"].value
+    test_set_list = sorted(test_set_list)
 
-    for i in range(0, len(test_crop_list)/test_crop_per_im):
-        i_im_crop = test_crop_list[i*test_crop_per_im][0][0:15]  # the name of the image the cropped patch belongs to
-        print(i_im_crop)
-        im_0_hdf5 = np.where(im_name_list==i_im_crop)[0][0]
-        i_period = set_index_list[im_0_hdf5][1]
-        i_im = set_index_list[im_0_hdf5][2]
+    for i_period in range(len(test_set_list)):
+        for i_file in test_set_list[i_period]:  # the name of the image the cropped patch belongs to
+            print(i_file)
+            im_0_hdf5 = np.where(im_name_list==i_file)[0][0]
 
-        # ind0_t_file = t_file_list[1].index(i_im_crop)
+            im = hdf5_file["im"][im_0_hdf5]
+            annot_img = hdf5_file["label"][im_0_hdf5]
 
-        im = hdf5_file["im"][im_0_hdf5]
-        conf_temp = np.zeros((5, 5))
-        if num_fusion == 0:
+            conf_temp = np.zeros((5, 5))
+            pred_sum = np.zeros((dim1_, dim2_))
+
             pred_im = np.zeros((dim1_, dim2_, 4))
-        else:
-            pred_im = np.zeros((2*num_fusion+1, dim1_, dim2_, 4))
 
-        for i_crop in range(test_crop_per_im):
-            if num_fusion != 0:
-                X = np.zeros((num_fusion*2+1, dim_patch, dim_patch, 3))
-            r_start, c_start = get_crop(dim_patch, dim_patch, test_setting.c, overlap, i_crop)
+            for i_crop in range(test_crop_per_im):
+                r_start, c_start = get_crop(dim_patch, dim_patch, dim2_, overlap, i_crop)
+                patch = im[r_start:r_start + dim_patch, c_start:c_start + dim_patch, :]
+                label_patch = annot_img[r_start:r_start + dim_patch, c_start:c_start + dim_patch]
 
-            #if num_fusion == 0:
-            patch = im[r_start:r_start+dim_patch, c_start:c_start+dim_patch, :]
-            X = patch - test_mean
-            # else:
-            #     im_name_stack = []
-            #     for i_fuse in range(2*num_fusion + 1):
-            #         # im_i_hdf5 = np.where(im_name_list==data_set_list.test[i_period][i_im+i_fuse-num_fusion])[0][0]
-            #         ind_t_file = t_file_list[1].index(i_im_crop)-2*num_fusion + i_fuse
-            #         im_i_hdf5 = np.where(im_name_list == t_file_list[1][ind_t_file])[0][0]
-            #         patch = hdf5_file["im"][im_i_hdf5][r_start:r_start+dim_patch, c_start:c_start+dim_patch, :]
-            #         X[i_fuse, :, :, :] = patch- test_mean
-            #         im_name_stack.append(im_name_list[im_i_hdf5])
+                if 0 in label_patch:
+                    pred_sum[r_start:r_start + dim_patch, c_start:c_start + dim_patch] = np.ones((dim_patch, dim_patch))
+                else:
+                    X = patch - test_mean
 
-            # predict on batch (batch size 1)
-            X = np.expand_dims(X, 0)
-            pred_label = tiramisu.predict_on_batch(X)
-            if num_fusion == 0:
-                pred_im[r_start:r_start+dim_patch, c_start:c_start+dim_patch, :] += pred_label[0, :, :, :]
-            else:
-                pred_im[:, r_start:r_start+dim_patch, c_start:c_start+dim_patch, :] += pred_label[0, :, :, :, :]
+                    # predict on batch (batch size 1)
+                    X = np.expand_dims(X, 0)
+                    pred_label = tiramisu.predict_on_batch(X)
 
-        # if num_fusion == 0:
-        label_image = pred_im/np.expand_dims(np.sum(pred_im, axis=-1), axis=-1)
-        cv2.imwrite(pred_path+i_im_crop+'.png', one_hot_reverse(label_image, color_label))
-        prob_image = np.amax(label_image, axis=-1)*255
-        cv2.imwrite(prob_path+i_im_crop+'.png', prob_image)
-        # else:
-        #     for i_fuse in range(2*num_fusion+1):
-        #         label_image = pred_im[i_fuse, :, :, :]/np.expand_dims(np.sum(pred_im[i_fuse, :, :, :], axis=-1), axis=-1)
-        #         hdf5_pred["pred"][i*(2*num_fusion + 1) + i_fuse] = label_image
-        #         hdf5_pred["frame_name"][i*(2*num_fusion + 1) + i_fuse] = im_name_stack[i_fuse]+'_'+str(i_fuse)
-                # cv2.imwrite(pred_path+im_name_stack[i_fuse]+'_'+str(i_fuse)+ '.png', one_hot_reverse(label_image, color_label))
-            # cv2.imwrite(pred_path + im_name_stack[i_fuse] + '_' + str(i_fuse) + '.png', one_hot_reverse(label_image, color_label))
-            # prob_image = np.amax(label_image, axis=-1)*255
-            # cv2.imwrite(prob_path+im_name_stack[i_fuse]+'_'+str(i_fuse)+'.png', prob_image)
+                    pred_im[r_start:r_start + dim_patch, c_start:c_start + dim_patch, :] += pred_label[0, :, :, :]
+                    pred_sum[r_start:r_start + dim_patch, c_start:c_start + dim_patch] += np.sum(pred_label[0, :, :, :],
+                                                                                                 axis=-1)
+            label_image = pred_im / np.expand_dims(pred_sum, axis=-1)
+            label_map = one_hot_reverse(label_image, color_label)
 
-        # evaluation (confusion matrix)
-        id_pred = np.argmax(label_image, axis=-1)
-        annot_img = hdf5_file['label'][im_0_hdf5]
-        id_test = colorToclass(annot_img)
+            cv2.imwrite(pred_path + i_file + '.png', label_map)
+            prob_image = np.amax(label_image, axis=-1) * 255
+            cv2.imwrite(prob_path + i_file + '.png', prob_image)
 
-        for r in range(dim1_):
-            for c in range(dim2_):
-                conf_temp[int(id_test[r, c]), id_pred[r, c]] += 1
-        conf_mat += conf_temp
+            # evaluation (confusion matrix)
+            id_pred = colorToclass(label_map[:, :, 0])
+            id_test = colorToclass(annot_img)
+
+            for r in range(dim1_):
+                for c in range(dim2_):
+                    conf_temp[int(id_test[r, c]), int(id_pred[r, c])] += 1
+            conf_mat += conf_temp
 
     print(conf_mat)
-    np.save(result_path + 'conf_mat_JDall', conf_mat)
+    np.save(resultPath + 'conf_mat', conf_mat)
 
     # -------------------------------------------------------------------------------------------------------------------#
     # precision, recall, overall accuracy, IOU
@@ -189,37 +171,37 @@ def prediction(result_path='_', model_name='C1_17_RS', pred_file='C1_17_RS.hdf5'
     tp_sum = 0
 
     for class_i in range(nb_class):
-        tp_i = conf_mat[class_i, class_i]
-        recall[class_i] = tp_i / np.sum(conf_mat[class_i, :])
-        precision[class_i] = tp_i / np.sum(conf_mat[:, class_i])
+        tp_i = conf_mat[class_i,class_i]
+        recall[class_i] = tp_i/np.sum(conf_mat[class_i,:])
+        precision[class_i] = tp_i/np.sum(conf_mat[:,class_i])
         tp_sum += tp_i
-        IOU[class_i] = tp_i / (np.sum(conf_mat[class_i, :]) + np.sum(conf_mat[:, class_i]) - tp_i)
+        IOU[class_i] = tp_i/(np.sum(conf_mat[class_i, :]) + np.sum(conf_mat[:, class_i]) - tp_i)
 
-    total_acc = tp_sum / np.sum(conf_mat)
+    total_acc = tp_sum/np.sum(conf_mat)
 
-    mean_IOU = np.sum(IOU) / 4
+    mean_IOU = np.sum(IOU)/4
 
     # ---------------------------------------------------------------------------------------------------------------------#
     # record the results in the log file
-    text_file = open(result_path + 'resultJDall.txt', "w")
+    text_file = open(resultPath+'result.txt',"w")
 
     text_file.write('------------------------------------------------------------------------------')
 
     text_file.write("\nConfusion Matrix:\n")
     for i in range(nb_class):
         for j in range(nb_class):
-            text_file.write("%15d" % conf_mat[i, j])
+            text_file.write("%15d"% conf_mat[i,j])
         text_file.write('\n')
 
     text_file.write('\nRecall: ')
     for j in range(nb_class):
-        text_file.write("%f " % recall[j])
+        text_file.write("%f "% recall[j])
 
     text_file.write('\n\nPrecision: ')
     for j in range(nb_class):
-        text_file.write('%f ' % precision[j])
+        text_file.write('%f '% precision[j])
 
-    text_file.write('\n\nOverall accuracy: %f\n' % total_acc)
+    text_file.write('\n\nOverall accuracy: %f\n'%total_acc)
 
     for j in range(nb_class):
         text_file.write('\n%f ' % IOU[j])
@@ -227,5 +209,12 @@ def prediction(result_path='_', model_name='C1_17_RS', pred_file='C1_17_RS.hdf5'
     text_file.close()
 
 
+def main():
+    args = parser.parse_args()
+
+    prediction(result_path=args.result_dir, model_name=args.model_name, pred_file=args.hdf5_file)
+
+    
 if __name__=='__main__':
-    prediction()
+    main()
+
