@@ -33,7 +33,7 @@ parser.add_argument("in_dir", metavar="IN_DIR", type=str, help="Path to original
 parser.add_argument("--hdf5_dir", metavar="HDF5_DIR", default="../Data/", type=str, help="Path to the hdf5 file")
 parser.add_argument("--hdf5_file", metavar="HDF5_NAME", default="", type=str, help="Name of the hdf5 file")
 parser.add_argument("--dim_patch", metavar="DIM_PATCH", default=224, type=int, help="size of the cropped patches, 56 for c0, 224 for c1")
-parser.add_argument("--isloaded", metavar="IS_LOADED", type=bool, default=False, help="if the data is loaded")
+parser.add_argument("--is_loaded", metavar="IS_LOADED", type=bool, default=False, help="if the data is loaded")
 parser.add_argument("--pre_trained", metavar="PRETRAINED_MODEL", type=str, default="",
                     help="the path and name to the model file, e.g. ../Model/model.hdf5")
 
@@ -46,7 +46,7 @@ def train(in_dir, hdf5_dir='../Data/', hdf5_name='filename', dim_patch=224, islo
     """
     # ------------------------------------------------------------------------------------------------------------------- #
     # Read HDF5 file if already loaded
-    if isloaded:
+    if is_loaded:
         hdf5_file = h5py.File(hdf5_dir+hdf5_name+'.hdf5', 'r')
     else:
     # # ------------------------------------------------------------------------------------------------------------------ #
