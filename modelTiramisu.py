@@ -80,7 +80,7 @@ class Tiramisu():
         return model_layers[level]['conv']
 
     def create(self, input_dim, layer_down, bottle_neck_layer, layer_up, growth_rate, l2_reg, dropout_rate, compression_rate, model_name):
-        inputs = Input(([0], input_dim[1], 3))
+        inputs = Input((input_dim[0], input_dim[1], 3))
 
         # first
         first_conv = Conv2D(
